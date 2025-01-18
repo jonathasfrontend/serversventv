@@ -46,29 +46,16 @@ router.get('/canais-programacao', async (req, res) => {
           Date.parse(p.dh_fim) > Date.parse(currentTime)
       );
 
-      // Programações anteriores
-    //   const anteriores = atualIndex > 1 ? programacaoDoCanal.slice(atualIndex - 2, atualIndex) : [];
-
       // Programação atual
       const atual = atualIndex > 1 ? programacaoDoCanal.slice(atualIndex - 2, atualIndex) : null;
-    //   const atual = atualIndex !== -1 ? programacaoDoCanal[atualIndex] : null;
 
       // Programações próximas
       const proximas = atualIndex > 1 ? programacaoDoCanal.slice(atualIndex - 2, atualIndex) : null;
-
-        // atualIndex !== -1 && atualIndex + 1 < programacaoDoCanal.length
-        //   ? programacaoDoCanal.slice(atualIndex + 1, atualIndex + 3)
-        //   : [];
 
       return {
         id_canal: canal.id_canal,
         nome: canal.nome,
         url_imagem: canal.url_imagem,
-        // programacao_anteriores: anteriores.map((p) => ({
-        //   titulo: p.titulo,
-        //   inicio: p.dh_inicio,
-        //   fim: p.dh_fim,
-        // })),
         programacao_atual: atual
           ? {
               titulo: atual[0].titulo,
