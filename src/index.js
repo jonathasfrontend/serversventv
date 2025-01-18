@@ -10,6 +10,7 @@ const channelsRoutes = require('./routes/channels');
 const playlistsRoutes = require('./routes/playlists');
 const liked = require('./routes/liked');
 const favorite = require('./routes/favorites');
+const guia = require('./routes/guia');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/channels', channelsRoutes);
 app.use('/playlists', playlistsRoutes);
 app.use('/liked', liked);
 app.use('/favorite', favorite);
+app.use('/guiatv', guia);
 
 app.get('/', (req, res) => {
     res.render('index');
