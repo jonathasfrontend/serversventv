@@ -12,15 +12,33 @@ router.post('/signup', async (req, res) => {
         const { username, email, password, avatar } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // confere se o nome de usuário possui apenas letras e mais de 3 caracteres
+        const usernameRegex = /^[a-zA-Z]+$/;
+        if (!usernameRegex.test(username) || username.length < 3) {
+            return res.status(400).json({ error: 'Seu nome deve ter mais de 3 caracteres e conter apenas letras.' });
+        }
+
+        // confere se o nome de usuário possui menos de 20 caracteres
+        if (username.length > 20) {
+            return res.status(400).json({ error: 'Seu nome deve ter no máximo 20 caracteres.' });
+        }
         
-        // confere se o email é válido
-        if (!email.includes('@')) {
-            return res.status(400).json({ error: 'Email inválido. use exemple@gmail.com' });
+        // verificação de email válido mais robusta com @ e terminar com .com
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Email inválido.' });
         }
 
         // confere se a senha posui mais de 8 caracteres
         if (password.length < 8) {
-            return res.status(400).json({ error: 'A senha deve ter pelo menos 8 caracteres, incluindo números, letras e símbolos.' });
+            return res.status(400).json({ error: 'Sua senha deve conter 8 caracteres.' });
+        }
+
+        // verifica se a senha do usuário possui letras e números e caracteres especiais
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ error: 'Sua senha deve conter 1 letra, 1 número e 1 caractere especial.' });
         }
 
         // Inserir usuário no banco de dados e retornar os dados inseridos
