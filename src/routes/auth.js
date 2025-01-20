@@ -12,6 +12,16 @@ router.post('/signup', async (req, res) => {
         const { username, email, password, avatar } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // confere se o email é válido
+        if (!email.includes('@')) {
+            return res.status(400).json({ error: 'Email inválido. use exemple@gmail.com' });
+        }
+
+        // confere se a senha posui mais de 8 caracteres
+        if (password.length < 8) {
+            return res.status(400).json({ error: 'A senha deve ter pelo menos 8 caracteres, incluindo números, letras e símbolos.' });
+        }
 
         // Inserir usuário no banco de dados e retornar os dados inseridos
         const { data, error } = await supabase
@@ -20,7 +30,7 @@ router.post('/signup', async (req, res) => {
             .select('*'); // Garantir que os dados retornem após inserção
 
         if (error || !data || data.length === 0) {
-            return res.status(500).json({ error: error?.message || 'Erro ao registrar usuário.' });
+            return res.status(500).json({ error: error?.message || 'Erro ao registrar usuário.' });            
         }
 
         const token = generateToken({ id: data[0].id });
