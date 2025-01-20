@@ -7,20 +7,28 @@ const router = express.Router();
 
 const generateToken = (params) => jwt.sign(params, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-router.post('/register', async (req, res) => {
-    const { username, email, password, avatar } = req.body;
+router.post('/signup', async (req, res) => {
+    try {
+        const { username, email, password, avatar } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    const { data, error } = await supabase
-        .from('users')
-        .insert([{ username, email, avatar, password: hashedPassword, created_at: new Date() }]);
+        // Inserir usuário no banco de dados e retornar os dados inseridos
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{ username, email, avatar, password: hashedPassword, created_at: new Date() }])
+            .select('*'); // Garantir que os dados retornem após inserção
 
-    if (error) return res.status(500).json({ error: error.message });
+        if (error || !data || data.length === 0) {
+            return res.status(500).json({ error: error?.message || 'Erro ao registrar usuário.' });
+        }
 
-    const token = generateToken({ id: data[0].id });
+        const token = generateToken({ id: data[0].id });
 
-    res.status(201).json({ token, email: user.email, username: user.username, id: user.id, avatar: user.avatar });
+        res.status(201).json({ token, email, username, id: data[0].id, avatar });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro interno no servidor.' });
+    }
 });
 
 router.post('/login', async (req, res) => {
