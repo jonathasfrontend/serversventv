@@ -18,7 +18,9 @@ router.post('/register', async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    res.status(201).json({ message: `Usuario ${username} cadastrado com sucesso` });
+    const token = generateToken({ id: data[0].id });
+
+    res.status(201).json({ token, email: user.email, username: user.username, id: user.id, avatar: user.avatar });
 });
 
 router.post('/login', async (req, res) => {
