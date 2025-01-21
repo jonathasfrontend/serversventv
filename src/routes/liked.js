@@ -70,10 +70,10 @@ router.get('/channelswithlikes', async (req, res) => {
 
         if (channelError) return res.status(500).json({ error: channelError.message });
 
-        // Obter likes com detalhes dos usuários
+        // Obter likes com detalhes dos usuários id, username e avatar
         const { data: likes, error: likeError } = await supabase
             .from('likes')
-            .select('tv_channel_id, user_id, users (id, username)');
+            .select('tv_channel_id, user_id, users (id, username, avatar)');
 
         if (likeError) return res.status(500).json({ error: likeError.message });
 
@@ -89,7 +89,8 @@ router.get('/channelswithlikes', async (req, res) => {
                 like_count: channelLikes.length,
                 liked_by: channelLikes.map(like => ({
                     user_id: like.users.id,
-                    user_name: like.users.username
+                    user_name: like.users.username,
+                    user_avatar: like.users.avatar
                 }))
             };
         });
