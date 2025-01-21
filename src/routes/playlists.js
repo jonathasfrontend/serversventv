@@ -55,14 +55,25 @@ router.get('/listplaylist/:userId', async (req, res) => {
     res.status(200).json(data);
 });
 
-// lista o conteudo de uma playlist pelo id da playlist de um usuario pelo id do usuario pegando o nome descrição do canal url e imagem
-router.get('/listplaylistcontent/:userId/:playlistId', async (req, res) => {
+// lista o conteudo de uma playlist pelo id da playlist e do usuario e mostrando os canais com name description url e image
+router.get('/playlist/:userId/:playlistId', async (req, res) => {
     const { userId, playlistId } = req.params;
+
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Verificar se a playlist existe
+    const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistError) return res.status(500).json({ error: playlistError.message });
+    if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
 
     const { data, error } = await supabase
         .from('playlist_items')
         .select('tv_channels(name, description, url, image)')
         .eq('playlist_id', playlistId);
+
     if (error) return res.status(500).json({ error: error.message });
 
     res.status(200).json(data);
