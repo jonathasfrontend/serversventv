@@ -35,10 +35,10 @@ router.post('/signup', async (req, res) => {
             return res.status(400).json({ error: 'Sua senha deve conter 8 caracteres.' });
         }
 
-        // verifica se a senha do usuário possui letras e números e caracteres especiais
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        // verifica se a senha do usuário possui letras e números e caracteres especiais mas pode ter espaços
+        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&* ]*$/;
         if (!passwordRegex.test(password)) {
-            return res.status(400).json({ error: 'Sua senha deve conter 1 letra, 1 número e 1 caractere especial.' });
+            return res.status(400).json({ error: 'Sua senha deve conter letra, número e caractere especial.' });
         }
 
         // Inserir usuário no banco de dados e retornar os dados inseridos
