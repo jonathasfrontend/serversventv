@@ -4,6 +4,15 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const { corsConfig } = require('./config/cors')
+const io = new Server(server);
+
+io.on('connection', (socket) => {
+    console.log('Novo cliente conectado');
+
+    socket.on('disconnect', () => {
+        console.log('Cliente desconectado');
+    });
+});
 
 const authRoutes = require('./routes/auth');
 const channelsRoutes = require('./routes/channels');

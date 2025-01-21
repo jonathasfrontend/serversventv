@@ -3,7 +3,6 @@ const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
 
-
 // Listar canais curtidos por um usuário
 router.get('/liked/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -56,6 +55,19 @@ router.post('/like/:userId/:channelId', async (req, res) => {
         .insert([{ user_id: userId, tv_channel_id: channelId }]);
 
     if (error) return res.status(500).json({ error: error.message });
+
+    // Emitir evento WebSocket com o ID do canal e o número de curtidas atualizado
+    const { data: likeCountData, error: countError } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact' })
+        .eq('tv_channel_id', channelId);
+
+    if (countError) return res.status(500).json({ error: countError.message });
+
+    io.emit('channelLiked', {
+        channelId,
+        likeCount: likeCountData.length,
+    });
 
     res.status(201).json({ message: 'Canal curtido com sucesso' });
 });
