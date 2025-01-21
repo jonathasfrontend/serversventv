@@ -24,8 +24,8 @@ const guia = require('./routes/guia');
 const app = express();
 
 app.use(express.json());
-// app.use(cors(corsConfig));
-app.use(cors());
+app.use(cors(corsConfig));
+// app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true})); 
 app.engine('html', require('ejs').renderFile);
