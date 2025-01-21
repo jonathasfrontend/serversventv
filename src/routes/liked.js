@@ -2,6 +2,23 @@ const express = require('express');
 const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
+const { Server } = require('socket.io');
+const http = require('http');
+const server = http.createServer(router);
+const io = new Server(server);
+
+io.on('connection', (socket) => {
+    console.log('Novo cliente conectado');
+  
+    // Evento de atualização de curtidas
+    socket.on('likeChannel', (data) => {
+      io.emit('channelLiked', data); // Atualiza todos os clientes conectados
+    });
+  
+    socket.on('disconnect', () => {
+      console.log('Cliente desconectado');
+    });
+  });
 
 // Listar canais curtidos por um usuário
 router.get('/liked/:userId', async (req, res) => {

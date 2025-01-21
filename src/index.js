@@ -2,18 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
-const { Server } = require('socket.io');
+
+const app = express();
 
 const { corsConfig } = require('./config/cors')
-const io = new Server(server);
-
-io.on('connection', (socket) => {
-    console.log('Novo cliente conectado');
-
-    socket.on('disconnect', () => {
-        console.log('Cliente desconectado');
-    });
-});
 
 const authRoutes = require('./routes/auth');
 const channelsRoutes = require('./routes/channels');
@@ -22,7 +14,6 @@ const liked = require('./routes/liked');
 const favorite = require('./routes/favorites');
 const guia = require('./routes/guia');
 
-const app = express();
 
 app.use(express.json());
 app.use(cors(corsConfig));
