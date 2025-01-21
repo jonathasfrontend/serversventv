@@ -7,6 +7,12 @@ const router = express.Router();
 router.post('/newplaylist', async (req, res) => {
     const { userId, name } = req.body;
 
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Criar a playlist
     const { data, error } = await supabase.from('playlists').insert([{ user_id: userId, name }]);
     if (error) return res.status(500).json({ error: error.message });
 
@@ -17,6 +23,17 @@ router.post('/newplaylist', async (req, res) => {
 router.post('/addplaylist', async (req, res) => {
     const { playlistId, channelId } = req.body;
 
+    // Verificar se a playlist existe
+    const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistError) return res.status(500).json({ error: playlistError.message });
+    if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
+
+    // Verificar se o canal existe
+    const { data: channel, error: channelError } = await supabase.from('tv_channels').select().eq('id', channelId);
+    if (channelError) return res.status(500).json({ error: channelError.message });
+    if (!channel.length) return res.status(404).json({ error: 'Canal não encontrado' });
+
+    // Adicionar o canal a playlist
     const { data, error } = await supabase.from('playlist_items').insert([{ playlist_id: playlistId, tv_channel_id: channelId }]);
     if (error) return res.status(500).json({ error: error.message });
 
@@ -26,6 +43,11 @@ router.post('/addplaylist', async (req, res) => {
 // lista a playlist de um usuario pelo id do usuario
 router.get('/listplaylist/:userId', async (req, res) => {
     const { userId } = req.params;
+
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
 
     const { data, error } = await supabase.from('playlists').select().eq('user_id', userId);
     if (error) return res.status(500).json({ error: error.message });
