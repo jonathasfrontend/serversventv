@@ -2,23 +2,6 @@ const express = require('express');
 const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
-const { Server } = require('socket.io');
-const http = require('http');
-const server = http.createServer(router);
-const io = new Server(server);
-
-io.on('connection', (socket) => {
-    console.log('Novo cliente conectado');
-  
-    // Evento de atualização de curtidas
-    socket.on('likeChannel', (data) => {
-      io.emit('channelLiked', data); // Atualiza todos os clientes conectados
-    });
-  
-    socket.on('disconnect', () => {
-      console.log('Cliente desconectado');
-    });
-  });
 
 // Listar canais curtidos por um usuário
 router.get('/liked/:userId', async (req, res) => {
@@ -32,6 +15,96 @@ router.get('/liked/:userId', async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
 
     res.status(200).json(data);
+});
+
+// Listar canais com likes e quem deu like
+router.get('/channelswithlikes', async (req, res) => {
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image');
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter likes com detalhes dos usuários id, username e avatar
+        const { data: likes, error: likeError } = await supabase
+            .from('likes')
+            .select('tv_channel_id, user_id, users (id, username, avatar)');
+
+        if (likeError) return res.status(500).json({ error: likeError.message });
+
+        // Combinar canais com likes
+        const result = channels.map(channel => {
+            const channelLikes = likes.filter(like => like.tv_channel_id === channel.id);
+            return {
+                id: channel.id,
+                name: channel.name,
+                description: channel.description,
+                categoria: channel.categoria,
+                url: channel.url,
+                image: channel.image,
+                like_count: channelLikes.length,
+                liked_by: channelLikes.map(like => ({
+                    user_id: like.users.id,
+                    user_name: like.users.username,
+                    user_avatar: like.users.avatar
+                }))
+            };
+        });
+
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Listar canais com likes e quem deu like pela categoria
+router.get('/channelswithlikes/:categoria', async (req, res) => {
+    const { categoria } = req.params;
+
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image')
+            .eq('categoria', categoria);
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter likes com detalhes dos usuários id, username e avatar
+        const { data: likes, error: likeError } = await supabase
+            .from('likes')
+            .select('tv_channel_id, user_id, users (id, username, avatar)');
+
+        if (likeError) return res.status(500).json({ error: likeError.message });
+
+        // Combinar canais com likes
+        const result = channels.map(channel => {
+            const channelLikes = likes.filter(like => like.tv_channel_id === channel.id);
+            return {
+                id: channel.id,
+                name: channel.name,
+                description: channel.description,
+                categoria: channel.categoria,
+                url: channel.url,
+                image: channel.image,
+                like_count: channelLikes.length,
+                liked_by: channelLikes.map(like => ({
+                    user_id: like.users.id,
+                    user_name: like.users.username,
+                    user_avatar: like.users.avatar
+                }))
+            };
+        });
+
+        // verifica se exite a categoria
+        if (!result.length) return res.status(404).json({ error: 'Categoria não encontrada' });
+
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Curtir um canal (com verificação de se o usuário já curtiu) pelo id do usuário e do canal
@@ -89,45 +162,61 @@ router.post('/like/:userId/:channelId', async (req, res) => {
     res.status(201).json({ message: 'Canal curtido com sucesso' });
 });
 
-// Listar canais com likes e quem deu like
-router.get('/channelswithlikes', async (req, res) => {
-    try {
-        // Obter todos os canais
-        const { data: channels, error: channelError } = await supabase
-            .from('tv_channels')
-            .select('id, name, description, url, image');
+// Descurtir um canal pelo id do usuário e do canal
+router.delete('/unlike/:userId/:channelId', async (req, res) => {
+    const { userId, channelId } = req.params;
 
-        if (channelError) return res.status(500).json({ error: channelError.message });
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase
+        .from('users')
+        .select()
+        .eq('id', userId);
 
-        // Obter likes com detalhes dos usuários id, username e avatar
-        const { data: likes, error: likeError } = await supabase
-            .from('likes')
-            .select('tv_channel_id, user_id, users (id, username, avatar)');
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-        if (likeError) return res.status(500).json({ error: likeError.message });
+    // Verificar se o canal existe
+    const { data: channel, error: channelError } = await supabase
+        .from('tv_channels')
+        .select()
+        .eq('id', channelId);
 
-        // Combinar canais com likes
-        const result = channels.map(channel => {
-            const channelLikes = likes.filter(like => like.tv_channel_id === channel.id);
-            return {
-                id: channel.id,
-                name: channel.name,
-                description: channel.description,
-                url: channel.url,
-                image: channel.image,
-                like_count: channelLikes.length,
-                liked_by: channelLikes.map(like => ({
-                    user_id: like.users.id,
-                    user_name: like.users.username,
-                    user_avatar: like.users.avatar
-                }))
-            };
-        });
+    if (channelError) return res.status(500).json({ error: channelError.message });
+    if (!channel.length) return res.status(404).json({ error: 'Canal não encontrado' });
 
-        res.status(200).json(result);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    // Verificar se o usuário curtiu o canal
+    const { data: like, error: likeError } = await supabase
+        .from('likes')
+        .select()
+        .eq('user_id', userId)
+        .eq('tv_channel_id', channelId);
+
+    if (likeError) return res.status(500).json({ error: likeError.message });
+    if (!like.length) return res.status(400).json({ error: 'Usuário não curtiu este canal' });
+
+    // Remover like
+    const { error } = await supabase
+        .from('likes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('tv_channel_id', channelId);
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Emitir evento WebSocket com o ID do canal e o número de curtidas atualizado
+    const { data: likeCountData, error: countError } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact' })
+        .eq('tv_channel_id', channelId);
+
+    if (countError) return res.status(500).json({ error: countError.message });
+
+    io.emit('channelLiked', {
+        channelId,
+        likeCount: likeCountData.length,
+    });
+
+    res.status(200).json({ message: 'Canal descurtido com sucesso' });
 });
 
 module.exports = router;

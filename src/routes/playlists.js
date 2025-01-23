@@ -79,4 +79,49 @@ router.get('/playlist/:userId/:playlistId', async (req, res) => {
     res.status(200).json(data);
 });
 
+// atualiza o nome de uma playlist pelo id da playlist e do usuario passando e o novo nome
+router.put('/updateplaylist', async (req, res) => {
+    const { playlistId, userId, name } = req.body;
+
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Verificar se a playlist existe
+    const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistError) return res.status(500).json({ error: playlistError.message });
+    if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
+
+    // verifica se o nome da playlist já existe para o usuario
+    const { data: playlistName, error: playlistNameError } = await supabase.from('playlists').select().eq('name', name).eq('user_id', userId);
+    if (playlistNameError) return res.status(500).json({ error: playlistNameError.message });
+    if (playlistName.length) return res.status(400).json({ error: 'Essa playlist com esse nome já existe!' });
+
+    const { data, error } = await supabase.from('playlists').update({ name }).eq('id', playlistId);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.status(200).json({ message: 'Playlist atualizada com sucesso!' });
+});
+
+// deleta uma playlist pelo id da playlist e do usuario
+router.delete('/deleteplaylist', async (req, res) => {
+    const { playlistId, userId } = req.body;
+
+    // Verificar se o usuário existe
+    const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Verificar se a playlist existe
+    const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistError) return res.status(500).json({ error: playlistError.message });
+    if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
+
+    const { data, error } = await supabase.from('playlists').delete().eq('id', playlistId);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.status(200).json({ message: 'Playlist deletada com sucesso!' });
+});
+
 module.exports = router;
