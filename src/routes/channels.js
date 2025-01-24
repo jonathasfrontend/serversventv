@@ -58,9 +58,6 @@ router.post('/', async (req, res) => {
     const { data, error } = await supabase.from('tv_channels').insert([{ name, description, categoria, url, image }]);
     if (error) return res.status(500).json({ error: error.message });
 
-    // verifica se o já existe o canal pelo nome do canal {name}
-    if (data.length === 0) return res.status(409).json({ error: `O canal ${name} já existe!` });
-
     res.status(201).json({ message: `O canal ${name} foi criado com sucesso!` });
 });
 
