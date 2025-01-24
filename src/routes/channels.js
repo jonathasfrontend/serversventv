@@ -55,6 +55,15 @@ router.get('/categoria/:categoria', async (req, res) => {
 router.post('/', async (req, res) => {
     const { name, description, categoria, url, image } = req.body;
 
+    // verifica se o canal já foi cadastrado no banco com mesmo nome
+    const { data: dataChannel, error: errorChannel } = await supabase
+        .from('tv_channels')
+        .select('*')
+        .eq('name', name);
+
+    if (errorChannel) return res.status(500).json({ error: errorChannel.message });
+    if (dataChannel.length) return res.status(400).json({ error: 'Este canal já existe!' });
+
     const { data, error } = await supabase.from('tv_channels').insert([{ name, description, categoria, url, image }]);
     if (error) return res.status(500).json({ error: error.message });
 
