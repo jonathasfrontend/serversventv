@@ -53,7 +53,7 @@ router.get('/categoria/:categoria', async (req, res) => {
 
 // Criar um canal
 router.post('/', async (req, res) => {
-    const { name, description, url, image } = req.body;
+    const { name, description, categoria, url, image } = req.body;
 
     const { data, error } = await supabase.from('tv_channels').insert([{ name, description, categoria, url, image }]);
     if (error) return res.status(500).json({ error: error.message });
