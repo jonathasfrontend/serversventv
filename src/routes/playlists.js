@@ -33,6 +33,11 @@ router.post('/addplaylist', async (req, res) => {
     if (channelError) return res.status(500).json({ error: channelError.message });
     if (!channel.length) return res.status(404).json({ error: 'Canal não encontrado' });
 
+    // verifica se canal já está na playlist do usuario pelo id do canal e da playlist
+    const { data: playlistItem, error: playlistItemError } = await supabase.from('playlist_items').select().eq('tv_channel_id', channelId).eq('playlist_id', playlistId);
+    if (playlistItemError) return res.status(500).json({ error: playlistItemError.message });
+    if (playlistItem.length) return res.status(400).json({ error: 'Esse canal já está na playlist!' });
+
     // Adicionar o canal a playlist
     const { data, error } = await supabase.from('playlist_items').insert([{ playlist_id: playlistId, tv_channel_id: channelId }]);
     if (error) return res.status(500).json({ error: error.message });
