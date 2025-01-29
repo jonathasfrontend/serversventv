@@ -109,6 +109,26 @@ router.put('/updateplaylist', async (req, res) => {
     res.status(200).json({ message: 'Playlist atualizada com sucesso!' });
 });
 
+// deleta um canal de uma playlist pelo id do canal e da playlist
+router.delete('/deleteplaylistitem', async (req, res) => {
+    const { playlistId, channelId } = req.body;
+
+    // Verificar se a playlist existe
+    const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistError) return res.status(500).json({ error: playlistError.message });
+    if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
+
+    // Verificar se o canal existe
+    const { data: channel, error: channelError } = await supabase.from('tv_channels').select().eq('id', channelId);
+    if (channelError) return res.status(500).json({ error: channelError.message });
+    if (!channel.length) return res.status(404).json({ error: 'Canal não encontrado' });
+
+    const { data, error } = await supabase.from('playlist_items').delete().eq('playlist_id', playlistId).eq('tv_channel_id', channelId);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.status(200).json({ message: 'Canal deletado da playlist com sucesso!' });
+});
+
 // deleta uma playlist pelo id da playlist e do usuario
 router.delete('/deleteplaylist', async (req, res) => {
     const { playlistId, userId } = req.body;
