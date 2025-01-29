@@ -171,22 +171,5 @@ router.get('/channels', async (req, res) => {
     }
 });
 
-const express = require("express");
-const axios = require("axios");
-const app = express();
-
-app.get("/proxy", async (req, res) => {
-    const url = req.query.url; // Passe a URL como parâmetro na requisição
-    try {
-        const response = await axios.get(url, { responseType: "arraybuffer" });
-        res.set("Content-Type", response.headers["content-type"]);
-        res.send(response.data);
-    } catch (err) {
-        res.status(500).send("Erro ao buscar a imagem.");
-    }
-});
-
-app.listen(3000, () => console.log("Servidor proxy rodando na porta 3000"));
-
 
 module.exports = router;
