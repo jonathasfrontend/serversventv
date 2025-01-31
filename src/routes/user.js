@@ -3,6 +3,9 @@ const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const generateToken = (params) => jwt.sign(params, process.env.JWT_SECRET, { expiresIn: '1h' });
 
 // lista todos os usuários cadastrados
 router.get('/', async (req, res) => {
@@ -53,10 +56,13 @@ router.post('/signup', async (req, res) => {
             return res.status(400).json({ error: 'Sua senha deve conter letra, número e caractere especial.' });
         }
 
+        // pega o username do usuario e transforma em lowercase e remove espaços
+        const usertag = username.toLowerCase().replace(/\s/g, '');
+
         // Inserir usuário no banco de dados e retornar os dados inseridos
         const { data, error } = await supabase
             .from('users')
-            .insert([{ username, email, avatar, password: hashedPassword, created_at: new Date() }])
+            .insert([{ username, nametag: usertag, email, avatar, password: hashedPassword, created_at: new Date() }])
             .select('*'); // Garantir que os dados retornem após inserção
 
         if (error || !data || data.length === 0) {
@@ -65,8 +71,9 @@ router.post('/signup', async (req, res) => {
 
         const token = generateToken({ id: data[0].id });
 
-        res.status(201).json({ token, email, username, id: data[0].id, avatar });
+        res.status(201).json({ token, email, username, usertag, id: data[0].id, avatar });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ error: 'Erro interno no servidor.' });
     }
 });
