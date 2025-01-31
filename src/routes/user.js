@@ -138,9 +138,9 @@ router.put('/:id', async (req, res) => {
 // atualiza o username de um usuário pelo id e faz a verificação se o username já existe para outro usuário atualiza email e avatar
 router.put('/update-userdata/:id', async (req, res) => {
     const { id } = req.params;
-    const { username, email, avatar } = req.body;
+    const { username } = req.body;
 
-    if (!username || !email || !avatar) {
+    if (!username) {
         return res.status(400).json({ error: 'Preencha todos os campos.' });
     }
 
@@ -159,9 +159,7 @@ router.put('/update-userdata/:id', async (req, res) => {
     }
 
     const { data: updatedUser, error: updateError } = await supabase.from('users').update({
-        username,
-        email,
-        avatar,
+        username,r,
     }).eq('id', id).single();
 
     if (updateError) return res.status(400).json({ error: updateError.message });
