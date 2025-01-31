@@ -26,6 +26,29 @@ router.get('/', async (req, res) => {
     return res.status(200).json(users);
 });
 
+// lista o usuario pelo nametag que é o username em lowercase e sem espaços e retorna o id, username, email e avatar
+router.get('/:nametag', async (req, res) => {
+    const { nametag } = req.params;
+
+    const { data, error } = await supabase.from('users').select('*').eq('nametag', nametag).single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    if (!data) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    const user = {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        tag: data.nametag,
+        avatar: data.avatar,
+    };
+
+    return res.status(200).json(user);
+});
+
 // cadastra um novo usuário com username, email, password e avatar
 router.post('/signup', async (req, res) => {
     try {
