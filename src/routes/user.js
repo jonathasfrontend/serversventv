@@ -17,6 +17,8 @@ router.get('/', async (req, res) => {
         return {
             id: user.id,
             username: user.username,
+            nametag: user.nametag,
+            cargo: user.cargo,
             avatar: user.avatar,
             email: user.email,
             password:user.password,
