@@ -52,7 +52,7 @@ router.get('/:nametag', async (req, res) => {
 // cadastra um novo usuário com username, email, password e avatar
 router.post('/signup', async (req, res) => {
     try {
-        const { username, email, password, avatar } = req.body;
+        const { username, email, cargo, password, avatar } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -85,7 +85,7 @@ router.post('/signup', async (req, res) => {
         // Inserir usuário no banco de dados e retornar os dados inseridos
         const { data, error } = await supabase
             .from('users')
-            .insert([{ username, nametag: usertag, email, avatar, password: hashedPassword, created_at: new Date() }])
+            .insert([{ username, nametag: usertag, email, avatar, cargo, password: hashedPassword, created_at: new Date() }])
             .select('*'); // Garantir que os dados retornem após inserção
 
         if (error || !data || data.length === 0) {
