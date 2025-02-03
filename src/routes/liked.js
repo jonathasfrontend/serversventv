@@ -17,6 +17,29 @@ router.get('/liked/:userId', async (req, res) => {
     res.status(200).json(data);
 });
 
+// Listar canais curtidos por um usuário pela nametag
+router.get('/likedby/:nametag', async (req, res) => {
+    const { nametag } = req.params;
+
+    const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('nametag', nametag)
+        .single();
+
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const { data, error } = await supabase
+        .from('likes')
+        .select('tv_channels(*)')
+        .eq('user_id', user.id);
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.status(200).json(data);
+});
+
 // Listar canais com likes e quem deu like
 router.get('/channelswithlikes', async (req, res) => {
     try {
@@ -137,7 +160,7 @@ router.post('/like/:userId/:channelId', async (req, res) => {
         .eq('tv_channel_id', channelId);
 
     if (likeError) return res.status(500).json({ error: likeError.message });
-    if (like.length) return res.status(400).json({ error: 'Usuário já curtiu este canal' });
+    if (like.length) return res.status(400).json({ error: 'Você já curtiu este canal' });
 
     // Adicionar like
     const { data, error } = await supabase
@@ -153,11 +176,6 @@ router.post('/like/:userId/:channelId', async (req, res) => {
         .eq('tv_channel_id', channelId);
 
     if (countError) return res.status(500).json({ error: countError.message });
-
-    io.emit('channelLiked', {
-        channelId,
-        likeCount: likeCountData.length,
-    });
 
     res.status(201).json({ message: 'Canal curtido com sucesso' });
 });
