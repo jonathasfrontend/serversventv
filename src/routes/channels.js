@@ -111,4 +111,15 @@ router.delete('/', async (req, res) => {
     res.status(200).json({ message: 'Canal deletado com sucesso' });
 });
 
+// Deleta todos os canais
+router.delete('/deletall', async (req, res) => {
+    const { data, error } = await supabase
+        .from('tv_channels')
+        .delete();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.status(200).json({ message: 'Todos os canais foram deletados' });
+});
+
 module.exports = router;
