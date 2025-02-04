@@ -96,8 +96,8 @@ router.put('/:id', async (req, res) => {
 });
 
 // Deletar um canal
-router.delete('/', async (req, res) => {
-    const { id } = req.body;
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
 
     const { data, error } = await supabase
         .from('tv_channels')
@@ -106,27 +106,30 @@ router.delete('/', async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    // verifica se existe o canal
-    if (!data.length) return res.status(404).json({ error: 'Canal não encontrado' });
+    if (!data || data.length === 0) {
+        return res.status(404).json({ error: 'Canal não encontrado' });
+    }
 
     res.status(200).json({ message: 'Canal deletado com sucesso' });
 });
 
 // Deleta todos os canais com verificação de senha do usuario com bcrypt da tabela users
-router.delete('/deleteall', async (req, res) => {
-    const { password } = req.body;
+router.delete('/delete-all', async (req, res) => {
+    const { id, password } = req.body;
 
-    const { data: dataUser, error: errorUser } = await supabase
+    if (!id || !password) return res.status(400).json({ error: 'Preencha todos os campos' });
+
+    const { data: user, error: userError } = await supabase
         .from('users')
         .select('password')
-        .eq('email', '  ');
+        .eq('id', id)
+        .single();
 
-    if (errorUser) return res.status(500).json({ error: errorUser.message });
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-    // verifica se a senha está correta
-    const isPasswordValid = bcrypt.compareSync(password, user.password);
-
-    if (!isPasswordValid) return res.status(401).json({ error: 'Senha inválida' });
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(401).json({ error: 'Senha incorreta' });
 
     const { data, error } = await supabase
         .from('tv_channels')
