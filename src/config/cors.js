@@ -1,4 +1,4 @@
-const whitelist = ['https://*.vercel.app','http://localhost:5173/'];
+const whitelist = ['https://*.vercel.app','http://localhost:5173'];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -8,7 +8,7 @@ const corsOptions = {
       callback(new Error('Não permitido por CORS'));
     }
   },
-  methods: ['GET', 'PUT', 'POST', 'DELETE']
+  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"]
 };
 
 module.exports = { corsOptions };
