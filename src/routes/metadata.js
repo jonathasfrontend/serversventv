@@ -1,5 +1,7 @@
 const express = require('express');
 const axios = require('axios');
+const createSupabaseClient = require('../connections/connections');
+const supabase = createSupabaseClient();
 const router = express.Router();
 
 const API_URL = 'https://metadatadb.lab.smartcontent.clarobrasil.mobi/graphql';
@@ -167,6 +169,80 @@ router.get('/channels', async (req, res) => {
         return res.status(200).json({ destaques: liveCatalogs });
     } catch (error) {
         console.error('Erro ao buscar os destaques de séries:', error.message);
+        return res.status(500).json({ error: 'Erro ao consultar a API externa.' });
+    }
+});
+
+// Lista o canal que tem mais likes
+router.get('/mostliked', async (req, res) => {
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image');
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter likes
+        const { data: likes, error: likeError } = await supabase
+            .from('likes')
+            .select('tv_channel_id');
+
+        if (likeError) return res.status(500).json({ error: likeError.message });
+
+        // Contar likes por canal
+        const likeCount = likes.reduce((acc, like) => {
+            acc[like.tv_channel_id] = acc[like.tv_channel_id] ? acc[like.tv_channel_id] + 1 : 1;
+            return acc;
+        }, {});
+
+        // Encontrar o canal com mais likes
+        const mostLikedChannelId = Object.keys(likeCount).reduce((a, b) => likeCount[a] > likeCount[b] ? a : b);
+
+        // Encontrar o canal com mais likes
+        const mostLikedChannel = channels.find(channel => channel.id === mostLikedChannelId);
+
+        res.status(200).json(mostLikedChannel);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Lista o canal que é mais favoritado
+router.get('/mostfavorited', async (req, res) => {
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image');
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter favoritos
+        const { data: favorites, error: favoriteError } = await supabase
+            .from('favorites')
+            .select('tv_channel_id');
+
+        if (favoriteError) return res.status(500).json({ error: favoriteError.message });
+
+        // Contar favoritos por canal
+        const favoriteCount = favorites.reduce((acc, favorite) => {
+            acc[favorite.tv_channel_id] = acc[favorite.tv_channel_id] ? acc[favorite.tv_channel_id] + 1 : 1;
+            return acc;
+        }, {});
+
+        // Encontrar o canal com mais favoritos
+        const mostFavoritedChannelId = Object.keys(favoriteCount).reduce((a, b) => favoriteCount[a] > favoriteCount[b] ? a : b);
+
+        // Encontrar o canal com mais favoritos
+        const mostFavoritedChannel = channels.find(channel => channel.id === mostFavoritedChannelId);
+
+        // Verificar se tem algum favorito
+        if (!favorites.length) return res.status(404).json({ error: 'Nenhum favorito encontrado' });
+
+        res.status(200).json(mostFavoritedChannel);
+    } catch (error) {
+        console.error('Erro ao buscar os favoritos:', error.message);
         return res.status(500).json({ error: 'Erro ao consultar a API externa.' });
     }
 });
