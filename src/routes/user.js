@@ -19,9 +19,9 @@ router.get('/', async (req, res) => {
             username: user.username,
             nametag: user.nametag,
             cargo: user.cargo,
-            avatar: user.avatar,
             email: user.email,
-            password:user.password,
+            avatar: user.avatar,
+            createdAt: user.created_at,
         };
     });
 
@@ -43,9 +43,10 @@ router.get('/:nametag', async (req, res) => {
     const user = {
         id: data.id,
         username: data.username,
+        nametag: data.nametag,
         email: data.email,
-        tag: data.nametag,
         avatar: data.avatar,
+        createdAt: data.created_at,
     };
 
     return res.status(200).json(user);
