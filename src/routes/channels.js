@@ -123,11 +123,6 @@ router.delete('/deleteall', async (req, res) => {
 
     if (errorUser) return res.status(500).json({ error: errorUser.message });
 
-    // verifica se existe o usuario
-    if (!dataUser.length) return res.status(404).json({ error: 'Usuário não encontrado' });
-
-    const user = dataUser[0];
-
     // verifica se a senha está correta
     const isPasswordValid = bcrypt.compareSync(password, user.password);
 
