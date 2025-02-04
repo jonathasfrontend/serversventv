@@ -2,6 +2,7 @@ const express = require('express');
 const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
+const bcrypt = require('bcrypt');
 
 // Listar todos os canais
 router.get('/', async (req, res) => {
@@ -111,15 +112,34 @@ router.delete('/', async (req, res) => {
     res.status(200).json({ message: 'Canal deletado com sucesso' });
 });
 
-// Deleta todos os canais
-router.delete('/deletall', async (req, res) => {
+// Deleta todos os canais com verificação de senha do usuario com bcrypt da tabela users
+router.delete('/deleteall', async (req, res) => {
+    const { password } = req.body;
+
+    const { data: dataUser, error: errorUser } = await supabase
+        .from('users')
+        .select('password')
+        .eq('email', '  ');
+
+    if (errorUser) return res.status(500).json({ error: errorUser.message });
+
+    // verifica se existe o usuario
+    if (!dataUser.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const user = dataUser[0];
+
+    // verifica se a senha está correta
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+
+    if (!isPasswordValid) return res.status(401).json({ error: 'Senha inválida' });
+
     const { data, error } = await supabase
         .from('tv_channels')
         .delete();
 
     if (error) return res.status(500).json({ error: error.message });
 
-    res.status(200).json({ message: 'Todos os canais foram deletados' });
+    res.status(200).json({ message: 'Todos os canais foram deletados com sucesso' });
 });
 
 module.exports = router;
