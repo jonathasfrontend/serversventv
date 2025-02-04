@@ -53,7 +53,7 @@ router.get('/categoria/:categoria', async (req, res) => {
 
 // Criar um canal
 router.post('/', async (req, res) => {
-    const { name, description, categoria, url, image } = req.body;
+    const { name, categoria, image } = req.body;
 
     // verifica se o canal já foi cadastrado no banco com mesmo nome
     const { data: dataChannel, error: errorChannel } = await supabase
@@ -64,7 +64,10 @@ router.post('/', async (req, res) => {
     if (errorChannel) return res.status(500).json({ error: errorChannel.message });
     if (dataChannel.length) return res.status(400).json({ error: 'Este canal já existe!' });
 
-    const { data, error } = await supabase.from('tv_channels').insert([{ name, description, categoria, url, image }]);
+    const descriptionName = name.toLowerCase().replace(/ /g, '-');
+    const urlLink = image;
+
+    const { data, error } = await supabase.from('tv_channels').insert([{ name, description: descriptionName, categoria, url: urlLink, image }]);
     if (error) return res.status(500).json({ error: error.message });
 
     res.status(201).json({ message: `O canal ${name} foi criado com sucesso!` });
@@ -73,11 +76,14 @@ router.post('/', async (req, res) => {
 // Atualizar um canal
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, description, categoria, url, image } = req.body;
+    const { name, categoria, image } = req.body;
+
+    const descriptionName = name.toLowerCase().replace(/ /g, '-');
+    const urlLink = image;
 
     const { data, error } = await supabase
         .from('tv_channels')
-        .update({ name, description, categoria, url, image })
+        .update({ name, description: descriptionName, categoria, url: urlLink, image })
         .eq('id', id);
 
     if (error) return res.status(500).json({ error: error.message });

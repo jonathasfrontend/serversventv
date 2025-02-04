@@ -82,7 +82,7 @@ router.get('/channelswithlikes', async (req, res) => {
     }
 });
 
-// Listar canais com likes e quem deu like pela categoria
+// Listar canais com likes e quem deu like pela categoria do canal
 router.get('/channelswithlikes/:categoria', async (req, res) => {
     const { categoria } = req.params;
 
