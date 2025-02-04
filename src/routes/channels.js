@@ -95,8 +95,8 @@ router.put('/:id', async (req, res) => {
 });
 
 // Deletar um canal
-router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
+router.delete('/', async (req, res) => {
+    const { id } = req.body;
 
     const { data, error } = await supabase
         .from('tv_channels')
