@@ -173,7 +173,6 @@ router.get('/channels', async (req, res) => {
     }
 });
 
-// Lista o canal que tem mais likes
 router.get('/mostliked', async (req, res) => {
     try {
         // Obter todos os canais
@@ -221,8 +220,6 @@ router.get('/mostliked', async (req, res) => {
     }
 });
 
-
-// Lista o canal que é mais favoritado
 router.get('/mostfavorited', async (req, res) => {
     try {
         // Obter todos os canais
