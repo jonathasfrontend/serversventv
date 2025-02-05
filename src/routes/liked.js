@@ -237,4 +237,51 @@ router.delete('/unlike/:userId/:channelId', async (req, res) => {
     res.status(200).json({ message: 'Canal descurtido com sucesso' });
 });
 
+router.get('/mostliked', async (req, res) => {
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image');
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter likes
+        const { data: likes, error: likeError } = await supabase
+            .from('likes')
+            .select('tv_channel_id');
+
+        if (likeError) return res.status(500).json({ error: likeError.message });
+
+        // Verificar se há algum like
+        if (!likes.length) {
+            return res.status(404).json({ error: 'Nenhum like encontrado' });
+        }
+
+        // Contar likes por canal
+        const likeCount = likes.reduce((acc, like) => {
+            acc[like.tv_channel_id] = acc[like.tv_channel_id] ? acc[like.tv_channel_id] + 1 : 1;
+            return acc;
+        }, {});
+
+        // Obter as chaves do objeto de contagem
+        const likeKeys = Object.keys(likeCount);
+        if (likeKeys.length === 0) {
+            return res.status(404).json({ error: 'Nenhum like encontrado' });
+        }
+
+        // Encontrar o canal com mais likes
+        const mostLikedChannelId = likeKeys.reduce((a, b) =>
+            likeCount[a] > likeCount[b] ? a : b
+        );
+
+        // Encontrar o canal com base no id
+        const mostLikedChannel = channels.find(channel => channel.id === mostLikedChannelId);
+
+        return res.status(200).json(mostLikedChannel);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

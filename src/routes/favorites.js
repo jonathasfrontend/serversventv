@@ -78,4 +78,53 @@ router.delete('/unfavorite/:userId/:channelId', async (req, res) => {
     res.status(200).json({ message: 'Canal removido dos favoritos!' });
 });
 
+router.get('/mostfavorited', async (req, res) => {
+    try {
+        // Obter todos os canais
+        const { data: channels, error: channelError } = await supabase
+            .from('tv_channels')
+            .select('id, name, description, categoria, url, image');
+
+        if (channelError) return res.status(500).json({ error: channelError.message });
+
+        // Obter favoritos
+        const { data: favorites, error: favoriteError } = await supabase
+            .from('favorites')
+            .select('tv_channel_id');
+
+        if (favoriteError) return res.status(500).json({ error: favoriteError.message });
+
+        // Verificar se há algum favorito
+        if (!favorites.length) {
+            return res.status(404).json({ error: 'Nenhum favorito encontrado' });
+        }
+
+        // Contar favoritos por canal
+        const favoriteCount = favorites.reduce((acc, favorite) => {
+            acc[favorite.tv_channel_id] = acc[favorite.tv_channel_id]
+                ? acc[favorite.tv_channel_id] + 1
+                : 1;
+            return acc;
+        }, {});
+
+        const favoriteKeys = Object.keys(favoriteCount);
+        if (favoriteKeys.length === 0) {
+            return res.status(404).json({ error: 'Nenhum favorito encontrado' });
+        }
+
+        // Encontrar o canal com mais favoritos usando reduce com valor inicial
+        const mostFavoritedChannelId = favoriteKeys.reduce((a, b) =>
+            favoriteCount[a] > favoriteCount[b] ? a : b
+        );
+
+        // Encontrar o canal com base no id
+        const mostFavoritedChannel = channels.find(channel => channel.id === mostFavoritedChannelId);
+
+        return res.status(200).json(mostFavoritedChannel);
+    } catch (error) {
+        console.error('Erro ao buscar os favoritos:', error.message);
+        return res.status(500).json({ error: 'Erro ao consultar a API externa.' });
+    }
+});
+
 module.exports = router;
