@@ -190,23 +190,37 @@ router.get('/mostliked', async (req, res) => {
 
         if (likeError) return res.status(500).json({ error: likeError.message });
 
+        // Verificar se há algum like
+        if (!likes.length) {
+            return res.status(404).json({ error: 'Nenhum like encontrado' });
+        }
+
         // Contar likes por canal
         const likeCount = likes.reduce((acc, like) => {
             acc[like.tv_channel_id] = acc[like.tv_channel_id] ? acc[like.tv_channel_id] + 1 : 1;
             return acc;
         }, {});
 
-        // Encontrar o canal com mais likes
-        const mostLikedChannelId = Object.keys(likeCount).reduce((a, b) => likeCount[a] > likeCount[b] ? a : b);
+        // Obter as chaves do objeto de contagem
+        const likeKeys = Object.keys(likeCount);
+        if (likeKeys.length === 0) {
+            return res.status(404).json({ error: 'Nenhum like encontrado' });
+        }
 
         // Encontrar o canal com mais likes
+        const mostLikedChannelId = likeKeys.reduce((a, b) =>
+            likeCount[a] > likeCount[b] ? a : b
+        );
+
+        // Encontrar o canal com base no id
         const mostLikedChannel = channels.find(channel => channel.id === mostLikedChannelId);
 
-        res.status(200).json(mostLikedChannel);
+        return res.status(200).json(mostLikedChannel);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // Lista o canal que é mais favoritado
 router.get('/mostfavorited', async (req, res) => {
@@ -225,26 +239,38 @@ router.get('/mostfavorited', async (req, res) => {
 
         if (favoriteError) return res.status(500).json({ error: favoriteError.message });
 
+        // Verificar se há algum favorito
+        if (!favorites.length) {
+            return res.status(404).json({ error: 'Nenhum favorito encontrado' });
+        }
+
         // Contar favoritos por canal
         const favoriteCount = favorites.reduce((acc, favorite) => {
-            acc[favorite.tv_channel_id] = acc[favorite.tv_channel_id] ? acc[favorite.tv_channel_id] + 1 : 1;
+            acc[favorite.tv_channel_id] = acc[favorite.tv_channel_id]
+                ? acc[favorite.tv_channel_id] + 1
+                : 1;
             return acc;
         }, {});
 
-        // Encontrar o canal com mais favoritos
-        const mostFavoritedChannelId = Object.keys(favoriteCount).reduce((a, b) => favoriteCount[a] > favoriteCount[b] ? a : b);
+        const favoriteKeys = Object.keys(favoriteCount);
+        if (favoriteKeys.length === 0) {
+            return res.status(404).json({ error: 'Nenhum favorito encontrado' });
+        }
 
-        // Encontrar o canal com mais favoritos
+        // Encontrar o canal com mais favoritos usando reduce com valor inicial
+        const mostFavoritedChannelId = favoriteKeys.reduce((a, b) =>
+            favoriteCount[a] > favoriteCount[b] ? a : b
+        );
+
+        // Encontrar o canal com base no id
         const mostFavoritedChannel = channels.find(channel => channel.id === mostFavoritedChannelId);
 
-        // Verificar se tem algum favorito
-        if (!favorites.length) return res.status(404).json({ error: 'Nenhum favorito encontrado' });
-
-        res.status(200).json(mostFavoritedChannel);
+        return res.status(200).json(mostFavoritedChannel);
     } catch (error) {
         console.error('Erro ao buscar os favoritos:', error.message);
         return res.status(500).json({ error: 'Erro ao consultar a API externa.' });
     }
 });
+
 
 module.exports = router;

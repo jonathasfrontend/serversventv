@@ -113,31 +113,34 @@ router.delete('/:id', async (req, res) => {
     res.status(200).json({ message: 'Canal deletado com sucesso' });
 });
 
-// Deleta todos os canais com verificação de senha do usuario com bcrypt da tabela users
-router.delete('/delete-all', async (req, res) => {
-    const { id, password } = req.body;
-
-    if (!id || !password) return res.status(400).json({ error: 'Preencha todos os campos' });
-
-    const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('password')
-        .eq('id', id)
-        .single();
-
-    if (userError) return res.status(500).json({ error: userError.message });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(401).json({ error: 'Senha incorreta' });
-
+// Deleta todos os canais com verificação de senha do usuario com bcrypt da tabela users pelo id email do usuario
+router.delete('/deleteAll/:id', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+  
+    // Busca o usuário para validar a senha
     const { data, error } = await supabase
-        .from('tv_channels')
-        .delete();
-
+      .from('users')
+      .select('password')
+      .eq('id', id)
+      .single();
+  
     if (error) return res.status(500).json({ error: error.message });
-
-    res.status(200).json({ message: 'Todos os canais foram deletados com sucesso' });
-});
+    if (!data) return res.status(404).json({ error: 'Usuário não encontrado' });
+  
+    const isValidPassword = bcrypt.compareSync(password, data.password);
+    if (!isValidPassword) return res.status(400).json({ error: 'Senha inválida' });
+  
+    // Adiciona uma cláusula WHERE que sempre retorna verdadeiro
+    const { data: dataChannels, error: errorChannels } = await supabase
+      .from('tv_channels')
+      .delete()
+      .not('id', 'is', null);  // Isso aplica um filtro "WHERE id IS NOT NULL"
+  
+    if (errorChannels) return res.status(500).json({ error: errorChannels.message });
+  
+    res.status(200).json({ message: 'Todos os canais foram deletados com sucesso!' });
+  });
+  
 
 module.exports = router;

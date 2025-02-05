@@ -124,6 +124,9 @@ router.get('/channelswithlikes/:categoria', async (req, res) => {
         // verifica se exite a categoria
         if (!result.length) return res.status(404).json({ error: 'Categoria não encontrada' });
 
+        // Verificar se tem algum canal
+        if (!likes.length) return res.status(404).json({ error: 'Nenhum like encontrado' });
+
         res.status(200).json(result);
     } catch (err) {
         res.status(500).json({ error: err.message });
