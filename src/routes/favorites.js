@@ -3,7 +3,6 @@ const createSupabaseClient = require('../connections/connections');
 const supabase = createSupabaseClient();
 const router = express.Router();
 
-
 // Buscar favoritos de um usuário
 router.get('/favorites/:userId', async (req, res) => {
     const { userId } = req.params;
