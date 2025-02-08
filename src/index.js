@@ -15,6 +15,7 @@ const favorite = require('./routes/favorites');
 const guia = require('./routes/guia');
 const users = require('./routes/user');
 const metadata = require('./routes/metadata');
+const analytics = require('./routes/analytics');
 
 app.use(express.json());
 app.use(cors(corsConfig));
@@ -33,6 +34,7 @@ app.use('/favorite', favorite);
 app.use('/guiatv', guia);
 app.use('/users', users);
 app.use('/metadata', metadata);
+app.use('/analytics', analytics);
 
 app.get('/', (req, res) => {
     res.render('index');
