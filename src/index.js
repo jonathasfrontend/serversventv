@@ -18,7 +18,11 @@ const metadata = require('./routes/metadata');
 const analytics = require('./routes/analytics');
 
 app.use(express.json());
+// Outras importações e configurações...
+// Aplique o middleware de CORS antes das rotas:
 app.use(cors(corsOptions));
+// Habilita tratamento de pré-requisições para todos os endpoints
+app.options('*', cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true})); 
 app.engine('html', require('ejs').renderFile);

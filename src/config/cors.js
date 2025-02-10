@@ -17,7 +17,10 @@ const corsOptions = {
       return callback(new Error('Não permitido por CORS'));
     }
   },
-  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"]
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+  credentials: true,           // se precisar enviar cookies ou tokens via credenciais
+  optionsSuccessStatus: 204      // resposta para preflight requests
 };
 
 module.exports = { corsOptions };
