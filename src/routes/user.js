@@ -28,6 +28,98 @@ router.get('/', async (req, res) => {
     return res.status(200).json(users);
 });
 
+router.get('/full', async (req, res) => {
+    try {
+        // 1. Buscar todos os usuários
+        const { data: users, error: usersError } = await supabase
+            .from('users')
+            .select('*');
+        if (usersError) throw usersError;
+
+        // 2. Buscar todas as curtidas, com os canais associados
+        const { data: likes, error: likesError } = await supabase
+            .from('likes')
+            .select('user_id, tv_channels(*)');
+        if (likesError) throw likesError;
+
+        // 3. Buscar todos os favoritos, com os canais associados
+        const { data: favorites, error: favoritesError } = await supabase
+            .from('favorites')
+            .select('user_id, tv_channels(*)');
+        if (favoritesError) throw favoritesError;
+
+        // 4. Buscar todas as playlists
+        const { data: playlists, error: playlistsError } = await supabase
+            .from('playlists')
+            .select('*');
+        if (playlistsError) throw playlistsError;
+
+        // 5. Buscar os canais de cada playlist (assumindo a existência da tabela "playlist_channels")
+        const { data: playlistChannels, error: pcError } = await supabase
+            .from('playlist_items')
+            .select('playlist_id, tv_channels(*)');
+        if (pcError) throw pcError;
+
+        // Agrupar as curtidas por usuário
+        const likesByUser = {};
+        likes.forEach(item => {
+            if (!likesByUser[item.user_id]) {
+                likesByUser[item.user_id] = [];
+            }
+            // Se o relacionamento estiver definido, item.tv_channels conterá os dados do canal
+            if (item.tv_channels) {
+                likesByUser[item.user_id].push(item.tv_channels);
+            }
+        });
+
+        // Agrupar os favoritos por usuário
+        const favoritesByUser = {};
+        favorites.forEach(item => {
+            if (!favoritesByUser[item.user_id]) {
+                favoritesByUser[item.user_id] = [];
+            }
+            if (item.tv_channels) {
+                favoritesByUser[item.user_id].push(item.tv_channels);
+            }
+        });
+
+        // Agrupar os canais das playlists: mapeia playlist_id para os canais contidos nela
+        const playlistChannelsMap = {};
+        playlistChannels.forEach(item => {
+            if (!playlistChannelsMap[item.playlist_id]) {
+                playlistChannelsMap[item.playlist_id] = [];
+            }
+            if (item.tv_channels) {
+                playlistChannelsMap[item.playlist_id].push(item.tv_channels);
+            }
+        });
+
+        // Agrupar as playlists por usuário, inserindo os canais em cada playlist
+        const playlistsByUser = {};
+        playlists.forEach(playlist => {
+            // Para cada playlist, anexa os canais que ela contém
+            playlist.channels = playlistChannelsMap[playlist.id] || [];
+            if (!playlistsByUser[playlist.user_id]) {
+                playlistsByUser[playlist.user_id] = [];
+            }
+            playlistsByUser[playlist.user_id].push(playlist);
+        });
+
+        // Combinar os dados para cada usuário
+        const fullUserData = users.map(user => ({
+            ...user,
+            likedChannels: likesByUser[user.id] || [],
+            favoritedChannels: favoritesByUser[user.id] || [],
+            playlists: playlistsByUser[user.id] || []
+        }));
+
+        res.status(200).json(fullUserData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // lista o usuario pelo nametag que é o username em lowercase e sem espaços e retorna o id, username, email e avatar
 router.get('/:nametag', async (req, res) => {
     const { nametag } = req.params;
@@ -64,7 +156,7 @@ router.post('/signup', async (req, res) => {
         if (!usernameRegex.test(username)) {
             return res.status(400).json({ error: 'Nome de usuário inválido.' });
         }
-      
+
         // verificação de email válido mais robusta com @ e terminar com .com
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(email)) {
@@ -92,7 +184,7 @@ router.post('/signup', async (req, res) => {
             .select('*'); // Garantir que os dados retornem após inserção
 
         if (error || !data || data.length === 0) {
-            return res.status(500).json({ error: error?.message || 'Erro ao registrar usuário.' });            
+            return res.status(500).json({ error: error?.message || 'Erro ao registrar usuário.' });
         }
 
         const token = generateToken({ id: data[0].id });
@@ -135,7 +227,7 @@ router.put('/:id', async (req, res) => {
 
     if (updateError) return res.status(400).json({ error: updateError.message });
 
-    return res.status(200).json({ message: 'Senha atualizada com sucesso.' });  
+    return res.status(200).json({ message: 'Senha atualizada com sucesso.' });
 });
 
 // atualiza o username de um usuário pelo id e faz a verificação se o username já existe para outro usuário atualiza email e avatar
@@ -162,7 +254,7 @@ router.put('/update-userdata/:id', async (req, res) => {
     }
 
     const { data: updatedUser, error: updateError } = await supabase.from('users').update({
-        username,r,
+        username, r,
     }).eq('id', id).single();
 
     if (updateError) return res.status(400).json({ error: updateError.message });
