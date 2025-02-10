@@ -1,24 +1,23 @@
-// Definindo a whitelist com expressões regulares
-const whitelist = [
-  /^https:\/\/.*\.vercel\.app$/, // Aceita qualquer subdomínio de vercel.app com HTTPS
-  /^http:\/\/localhost:5173$/     // Aceita exatamente localhost na porta 5173
+// Definindo os origins permitidos usando regex
+const allowedOrigins = [
+  /^https:\/\/.*\.vercel\.app$/, // permite qualquer subdomínio que termine em .vercel.app via HTTPS
+  /^http:\/\/localhost:5173$/     // permite exatamente http://localhost:5173
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Permitir requisições sem origem (ex.: requisições via cURL ou Postman)
-    if (!origin) return callback(null, true);
-    // Verifica se a origem bate com alguma expressão da whitelist
-    if (whitelist.some((regex) => regex.test(origin))) {
+  origin: function (origin, callback) {
+    // Caso não haja origin (ex.: requisições de mesmo domínio ou de ferramentas como Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+    // Verifica se o origin bate com algum dos padrões permitidos
+    if (allowedOrigins.some((regex) => regex.test(origin))) {
       return callback(null, true);
     } else {
       return callback(new Error('Não permitido por CORS'));
     }
   },
-  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-  // Definindo cabeçalhos permitidos, caso a requisição envie outros headers personalizados
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true, // Se você precisar enviar cookies ou autenticação
+  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"]
 };
 
 module.exports = { corsOptions };
