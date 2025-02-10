@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-const { corsConfig } = require('./config/cors')
+const { corsOptions } = require('./config/cors')
 
 const authRoutes = require('./routes/auth');
 const channelsRoutes = require('./routes/channels');
@@ -18,7 +18,7 @@ const metadata = require('./routes/metadata');
 const analytics = require('./routes/analytics');
 
 app.use(express.json());
-app.use(cors(corsConfig));
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true})); 
 app.engine('html', require('ejs').renderFile);
