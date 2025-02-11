@@ -119,7 +119,6 @@ router.get('/full', async (req, res) => {
     }
 });
 
-
 // lista o usuario pelo nametag que é o username em lowercase e sem espaços e retorna o id, username, email e avatar
 router.get('/:nametag', async (req, res) => {
     const { nametag } = req.params;
