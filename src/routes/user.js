@@ -229,8 +229,30 @@ router.put('/:id', async (req, res) => {
     return res.status(200).json({ message: 'Senha atualizada com sucesso.' });
 });
 
-// atualiza o username de um usuário pelo id e faz a verificação se o username já existe para outro usuário atualiza email e avatar
-router.put('/update-userdata/:id', async (req, res) => {
+// autliza cargo de um usuário pelo id
+router.put('/update-cargo/:id', async (req, res) => {
+    const { id } = req.params;
+    const { cargo } = req.body;
+
+    if (!cargo) {
+        return res.status(400).json({ error: 'Preencha todos os campos.' });
+    }
+
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', id).single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    const { data: updatedUser, error: updateError } = await supabase.from('users').update({
+        cargo,
+    }).eq('id', id).single();
+
+    if (updateError) return res.status(400).json({ error: updateError.message });
+
+    return res.status(200).json({ message: 'Cargo atualizado com sucesso.' });
+});
+
+// atualiza o username de um usuário pelo id
+router.put('/update-username/:id', async (req, res) => {
     const { id } = req.params;
     const { username } = req.body;
 
@@ -242,23 +264,73 @@ router.put('/update-userdata/:id', async (req, res) => {
 
     if (error) return res.status(400).json({ error: error.message });
 
-    if (user.username !== username) {
-        const { data: usernameExists, error: usernameError } = await supabase.from('users').select('*').eq('username', username);
-
-        if (usernameError) return res.status(400).json({ error: usernameError.message });
-
-        if (usernameExists) {
-            return res.status(400).json({ error: 'Nome de usuário já existe.' });
-        }
+    // confere se o nome de usuário possui apenas letras mas pode ter espaços e mais de 3 caracteres
+    const usernameRegex = /^[a-zA-Z ]{3,}$/;
+    if (!usernameRegex.test(username)) {
+        return res.status(400).json({ error: 'Nome de usuário inválido.' });
     }
 
+    // pega o username do usuario e transforma em lowercase e remove espaços
+    const usertag = username.toLowerCase().replace(/\s/g, '');
+
     const { data: updatedUser, error: updateError } = await supabase.from('users').update({
-        username, r,
+        username,
+        nametag: usertag,
     }).eq('id', id).single();
 
     if (updateError) return res.status(400).json({ error: updateError.message });
 
-    return res.status(200).json({ message: 'Usuário atualizado com sucesso.' });
+    return res.status(200).json({ message: 'Nome de usuário atualizado com sucesso.' });
+});
+
+// atualiza o email de um usuário pelo id
+router.put('/update-email/:id', async (req, res) => {
+    const { id } = req.params;
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Preencha todos os campos.' });
+    }
+
+    // verificação de email válido mais robusta com @ e terminar com .com
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Email inválido.' });
+    }
+
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', id).single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    const { data: updatedUser, error: updateError } = await supabase.from('users').update({
+        email,
+    }).eq('id', id).single();
+
+    if (updateError) return res.status(400).json({ error: updateError.message });
+
+    return res.status(200).json({ message: 'Email atualizado com sucesso.' });
+});
+
+// atualiza o avatar de um usuário pelo id
+router.put('/update-avatar/:id', async (req, res) => {
+    const { id } = req.params;
+    const { avatar } = req.body;
+
+    if (!avatar) {
+        return res.status(400).json({ error: 'Preencha todos os campos.' });
+    }
+
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', id).single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    const { data: updatedUser, error: updateError } = await supabase.from('users').update({
+        avatar,
+    }).eq('id', id).single();
+
+    if (updateError) return res.status(400).json({ error: updateError.message });
+
+    return res.status(200).json({ message: 'Avatar atualizado com sucesso.' });
 });
 
 // deleta um usuário pelo id
