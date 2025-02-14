@@ -4,20 +4,36 @@ const supabase = createSupabaseClient();
 const router = express.Router();
 
 // Criar uma nova playlist
-router.post('/newplaylist', async (req, res) => {
-    const { userId, name } = req.body;
+router.post('/createplaylist', async (req, res) => {
+    const { name, userId } = req.body;
 
     // Verificar se o usuário existe
     const { data: user, error: userError } = await supabase.from('users').select().eq('id', userId);
     if (userError) return res.status(500).json({ error: userError.message });
     if (!user.length) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-    // Criar a playlist
-    const { data, error } = await supabase.from('playlists').insert([{ user_id: userId, name }]);
+    // Verifica se a playlist já foi cadastrada com mesmo nome
+    const { data: dataPlaylist, error: errorPlaylist } = await supabase
+        .from('playlists')
+        .select()
+        .eq('name', name)
+        .eq('user_id', userId);
+
+    if (errorPlaylist) return res.status(500).json({ error: errorPlaylist.message });
+    if (dataPlaylist.length) return res.status(400).json({ error: 'Playlist já cadastrada' });
+
+    // Inserir a nova playlist e retornar os dados inseridos
+    const { data, error } = await supabase
+        .from('playlists')
+        .insert([{ name, user_id: userId }])
+        .select();
+
     if (error) return res.status(500).json({ error: error.message });
 
-    res.status(201).json({ message: 'Playlist criada com sucesso' });
+    // Retorna o primeiro item do array de dados (a playlist recém-criada)
+    res.status(201).json(data[0]);
 });
+
 
 // Adicionar canal a uma playlist
 router.post('/addplaylist', async (req, res) => {
