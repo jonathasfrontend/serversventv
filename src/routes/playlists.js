@@ -21,7 +21,7 @@ router.post('/createplaylist', async (req, res) => {
 
     // verifica se o nome da playlist já existe para o usuario
     if (errorPlaylist) return res.status(500).json({ error: errorPlaylist.message });
-    if (dataPlaylist.length) return res.status(400).json({ error: 'Essa playlist com esse nome já existe!' });
+    if (dataPlaylist.length) return res.status(400).json({ error: 'Essa playlist já existe!' });
 
     // Inserir a nova playlist e retornar os dados inseridos
     const { data, error } = await supabase
