@@ -97,7 +97,9 @@ router.get('/playlist/:userId/:playlistId', async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    res.status(200).json(data);
+    const channels = data.map((item) => item.tv_channels);
+
+    res.status(200).json(channels);
 });
 
 // atualiza o nome de uma playlist pelo id da playlist e do usuario passando e o novo nome
