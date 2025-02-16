@@ -95,16 +95,11 @@ router.get('/playlist/:userId/:playlistId', async (req, res) => {
         .select('tv_channels(*)')
         .eq('playlist_id', playlistId);
 
-    // mostra o nome da playlist que o canal pertence
-    data.forEach((item) => {
-        item.tv_channels.playlist_name = playlist[0].name;
-    });
+    // mostra o nome da playlist que o canal pertence separando por playlist
+    const { data: playlistName, error: playlistNameError } = await supabase.from('playlists').select().eq('id', playlistId);
+    if (playlistNameError) return res.status(500).json({ error: playlistNameError.message });
 
-    if (error) return res.status(500).json({ error: error.message });
-
-    const response = data.map((item) => item.tv_channels);
-
-    res.status(200).json(response);
+    res.status(200).json({ playlistName: playlistName[0].name, data });
 });
 
 // atualiza o nome de uma playlist pelo id da playlist e do usuario passando e o novo nome
