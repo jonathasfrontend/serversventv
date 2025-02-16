@@ -35,7 +35,6 @@ router.post('/createplaylist', async (req, res) => {
     res.status(201).json(data[0]);
 });
 
-
 // Adicionar canal a uma playlist
 router.post('/addplaylist', async (req, res) => {
     const { playlistId, channelId } = req.body;
@@ -159,6 +158,11 @@ router.delete('/deleteplaylist', async (req, res) => {
     const { data: playlist, error: playlistError } = await supabase.from('playlists').select().eq('id', playlistId);
     if (playlistError) return res.status(500).json({ error: playlistError.message });
     if (!playlist.length) return res.status(404).json({ error: 'Playlist não encontrada' });
+
+    // verifica se tem canais na playlist para deletar se tiver não deixa deletar
+    const { data: playlistItem, error: playlistItemError } = await supabase.from('playlist_items').select().eq('playlist_id', playlistId);
+    if (playlistItemError) return res.status(500).json({ error: playlistItemError.message });
+    if (playlistItem.length) return res.status(400).json({ error: 'Essa playlist contém canais, delete os canais antes de deletar a playlist!' });
 
     const { data, error } = await supabase.from('playlists').delete().eq('id', playlistId);
     if (error) return res.status(500).json({ error: error.message });
