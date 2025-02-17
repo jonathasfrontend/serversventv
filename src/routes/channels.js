@@ -52,6 +52,22 @@ router.get('/categoria/:categoria', async (req, res) => {
     res.status(200).json(data);
 });
 
+// rota para buscar os canais pelo nome do canal
+router.get('/search/:search', async (req, res) => {
+    const { search } = req.params;
+
+    const { data, error } = await supabase
+        .from('tv_channels')
+        .select('*')
+        .ilike('name', `%${search}%`);
+
+    if (error) return res.status(500).json({ error: error.message });
+    // Verifica se existe o canal
+    if (!data.length) return res.status(404).json({ error: 'Canal não encontrado' });
+
+    res.status(200).json(data);
+});
+
 // Criar um canal
 router.post('/', async (req, res) => {
     const { name, categoria, image, url } = req.body;

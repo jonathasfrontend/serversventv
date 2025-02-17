@@ -1,6 +1,8 @@
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(255) NOT NULL UNIQUE,
+    nametag VARCHAR(255) NOT NULL UNIQUE,
+    cargo VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password TEXT NOT NULL,
     avatar VARCHAR(255) NOT NULL UNIQUE,
@@ -11,9 +13,10 @@ CREATE TABLE tv_channels (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    categoria VARCHAR(255) NOT NULL,
     url TEXT NOT NULL,
     image VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE likes (
@@ -44,10 +47,10 @@ CREATE TABLE playlist_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE comments (
+CREATE TABLE feedbacks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    tv_channel_id UUID REFERENCES tv_channels(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
+    message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
