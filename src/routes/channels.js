@@ -76,14 +76,13 @@ router.post('/', async (req, res) => {
 // Atualizar um canal
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, categoria, image } = req.body;
+    const { name, categoria, image, url } = req.body;
 
     const descriptionName = name.toLowerCase().replace(/ /g, '-');
-    const urlLink = image;
 
     const { data, error } = await supabase
         .from('tv_channels')
-        .update({ name, description: descriptionName, categoria, url: urlLink, image })
+        .update({ name, description: descriptionName, categoria, url, image })
         .eq('id', id);
 
     if (error) return res.status(500).json({ error: error.message });
