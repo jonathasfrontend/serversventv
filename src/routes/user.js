@@ -28,7 +28,8 @@ router.get('/', async (req, res) => {
     return res.status(200).json(users);
 });
 
-router.get('/full', async (req, res) => {
+// lista todos os usuários com suas curtidas, favoritos e playlists
+router.get('/full', async (req, res) => { 
     try {
         // 1. Buscar todos os usuários
         const { data: users, error: usersError } = await supabase
